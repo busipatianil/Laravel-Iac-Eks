@@ -48,7 +48,9 @@ pipeline {
 
         stage('Terraform Apply') {
             steps {
-                withAWS(credentials: 'your-aws-credentials') { // Configure AWS credentials in Jenkins
+                withCredentials([string(credentialsId: '', variable: 'AWS_CREDS')]) {
+    // some block
+}
                     sh '''
                         terraform init
                         terraform apply -auto-approve -var="docker_image=${env.DOCKER_IMAGE}"
