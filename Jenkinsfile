@@ -10,7 +10,7 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'composer install --no-dev --optimize-autoloader'
+                sh 'composer install --optimize-autoloader --no-dev'
                 sh 'npm install && npm run prod' // Or yarn
                 sh 'php artisan package:discover --ansi'
                 sh 'php artisan config:cache'
