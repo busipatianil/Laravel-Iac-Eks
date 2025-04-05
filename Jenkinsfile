@@ -4,7 +4,7 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                checkout scm
+              git credentialsId: 'githubtoken', url: 'https://github.com/busipatianil/Laravel-Iac-Eks.git'
             }
         }
 
@@ -24,65 +24,3 @@ pipeline {
                 sh 'php artisan test'
             }
         }
-
-        stage('Docker Build') {
-            steps {
-                script {
-                    def appName = "helloapp" // Replace with your app name
-                    def imageTag = "${appName}:${env.GIT_COMMIT}"
-                    env.DOCKER_IMAGE = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${imageTag}"
-                    docker.build(env.DOCKER_IMAGE, '.')
-                }
-            }
-        }
-
-        stage('Docker Push') {
-            steps {
-                script {
-                    docker.withRegistry("https://${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com", 'aws') {
-                        docker.image(env.DOCKER_IMAGE).push()
-                    }
-                }
-            }
-        }
-
-        stage('Terraform Apply') {
-            steps {
-                withCredentials([string(credentialsId: '', variable: 'AWS_CREDS')]) {
-    // some block
-}
-                    sh '''
-                        terraform init
-                        terraform apply -auto-approve -var="docker_image=${env.DOCKER_IMAGE}"
-                    '''
-                }
-            }
-        }
-
-        stage('Ansible Playbook') {
-            steps {
-                withCredentials([string(credentialsId: 'your-kubeconfig', variable: 'KUBECONFIG_CONTENT')]) { // Configure kubeconfig in Jenkins
-                    sh '''
-                        mkdir -p ~/.kube
-                        echo "$KUBECONFIG_CONTENT" > ~/.kube/config
-                        export KUBECONFIG=~/.kube/config
-                    '''
-                }
-                sh '''
-                    ansible-playbook -i inventory/eks_hosts deploy.yml -e "docker_image=${env.DOCKER_IMAGE}"
-                '''
-            }
-        }
-
-        // Optional: Integration/E2E Tests
-        // stage('Integration Tests') { ... }
-
-        // Optional: Verification/Rollback
-        // stage('Verification') { ... }
-    }
-
-    environment {
-        AWS_ACCOUNT_ID = credentials('aws-account-id') // Configure AWS account ID as a secret
-        AWS_REGION = 'us-east-1' // Replace with your AWS region
-    }
-}
