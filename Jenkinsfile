@@ -8,7 +8,7 @@ pipeline {
         }
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t test/latest -f /opt/Dockerfile .'
+                sh 'docker build -t test/latest .'
             }
         }
 }  
