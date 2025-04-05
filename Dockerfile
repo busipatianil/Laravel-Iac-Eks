@@ -1,12 +1,40 @@
-FROM php:8.1-fpm
+FROM php:8.2-fpm-alpine
+
+# Set working directory
 WORKDIR /var/www
 
-COPY . .
+# Install system dependencies
+RUN apk update && apk add --no-cache \
+    git \
+    curl \
+    libzip-dev \
+    zip \
+    nginx
 
-RUN apt-get update && apt-get install -y nginx supervisor unzip git curl \
-    && docker-php-ext-install pdo_mysql
+# Install PHP extensions
+RUN docker-php-ext-install pdo pdo_mysql zip bcmath gd
 
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+# Install Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-CMD ["supervisord", "-c", "/etc/supervisor/supervisord.conf"]
+# Copy application code
+COPY . /var/www
+
+# Set file permissions
+RUN chown -R www-data:www-data /var/www
+RUN chmod -R 755 /var/www/storage /var/www/bootstrap/cache
+
+# Install PHP dependencies
+RUN composer install --no-dev --optimize-autoloader
+
+# Copy Nginx configuration
+COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
+
+# Expose port 80 for Nginx
+EXPOSE 80
+
+# Set entrypoint to start PHP-FPM and Nginx
+ENTRYPOINT ["/bin/sh", "-c", "php-fpm82 -D && nginx -g 'daemon off;'"]
+
+# Switch user to www-data for application execution
+USER www-data
