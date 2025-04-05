@@ -8,7 +8,7 @@ pipeline {
         }
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -f testlaravel/laravel-app:latest'
+                sh 'docker build -f testlaravel/laravel-app:latest .'
             }
         }
 }  
