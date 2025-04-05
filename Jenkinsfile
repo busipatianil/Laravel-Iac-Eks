@@ -10,15 +10,13 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'composer install --optimize-autoloader --no-dev'
-                sh 'npm install && npm run prod' // Or yarn
-                sh 'php artisan package:discover --ansi'
-                sh 'php artisan config:cache'
-                sh 'php artisan route:cache'
-                // Add static code analysis and unit testing steps here
+                sh 'php --version'
+                sh 'composer install'
+                sh 'composer --version'
+                sh 'cp .env.example .env'
+                sh 'php artisan key:generate'
             }
         }
-
         stage('Unit Tests') {
             steps {
                 sh 'php artisan test'
