@@ -24,3 +24,7 @@ pipeline {
                 sh 'php artisan test'
             }
         }
+    }
+}    
+    
+        
